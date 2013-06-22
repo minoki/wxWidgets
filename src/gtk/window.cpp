@@ -31,11 +31,13 @@
 #include "wx/caret.h"
 #include "wx/fontutil.h"
 #include "wx/sysopt.h"
+#include "wx/event_textinput.h"
 #ifdef __WXGTK3__
     #include "wx/gtk/dc.h"
 #endif
 
 #include <ctype.h>
+#include <sstream>
 
 #include <gtk/gtk.h>
 #include "wx/gtk/private.h"
@@ -1215,6 +1217,8 @@ gtk_wxwindow_commit_cb (GtkIMContext * WXUNUSED(context),
 
 bool wxWindowGTK::GTKDoInsertTextFromIM(const char* str)
 {
+    wxLogTrace("textinput","commit");
+
     const wxString data(wxGTK_CONV_BACK_SYS(str));
 
     // If we have a corresponding key event, send wxEVT_KEY_DOWN now.
@@ -1275,6 +1279,135 @@ bool wxWindowGTK::GTKOnInsertText(const char* text)
     }
 
     return GTKDoInsertTextFromIM(text);
+}
+
+
+extern "C" {
+static gboolean
+gtk_wxwindow_preedit_changed_cb( GtkIMContext *context,
+                                 wxWindow *window )
+{
+    wxLogTrace("textinput","preedit_changed");
+    gchar *str;
+    gint cursor_pos;
+    PangoAttrList *attrs;
+    gtk_im_context_get_preedit_string(context, &str, &attrs, &cursor_pos);
+    PangoAttrIterator *iter = pango_attr_list_get_iterator(attrs);
+    std::vector<wxAttributedStringSegment> segments;
+    std::ostringstream ss;
+    do {
+        GSList *alist = pango_attr_iterator_get_attrs(iter);
+        if (!alist) {
+            break;
+        }
+        gint start;
+        gint end;
+        pango_attr_iterator_range(iter, &start, &end);
+        wxAttributedStringSegment segment;
+        std::vector<gchar> buffer(end-start+1);
+        std::copy(str+start, str+end, buffer.begin());
+        buffer[end-start] = 0;
+        segment.first = wxGTK_CONV_BACK_SYS(&buffer[0]);
+        ss << "[" << start << ":" << end;
+        for (GSList *p = alist; p; p = p->next) {
+            PangoAttribute *a = (PangoAttribute *)p->data;
+            //guint start_index = a->start_index;
+            //guint end_index = a->end_index;
+            //ss << "[" << start_index << ":" << end_index << ";";
+            ss << ";";
+            const PangoAttrClass *klass = a->klass;
+            switch (klass->type) {
+            case PANGO_ATTR_FOREGROUND:
+            {
+                PangoAttrColor *ac = (PangoAttrColor *)a;
+                PangoColor color = ac->color;
+                segment.second.SetTextColour(wxColour(color.red>>8, color.green>>8, color.blue>>8));
+                ss << "fg(" << color.red << "," << color.green << "," << color.blue << ")";
+                break;
+            }
+            case PANGO_ATTR_BACKGROUND:
+            {
+                PangoAttrColor *ac = (PangoAttrColor *)a;
+                PangoColor color = ac->color;
+                segment.second.SetBackgroundColour(wxColour(color.red>>8, color.green>>8, color.blue>>8));
+                ss << "bg(" << color.red << "," << color.green << "," << color.blue << ")";
+                break;
+            }
+            case PANGO_ATTR_UNDERLINE:
+            {
+                PangoAttrInt *ai = (PangoAttrInt *)a;
+                switch (ai->value) {
+                case PANGO_UNDERLINE_NONE:
+                    break;
+                case PANGO_UNDERLINE_SINGLE:
+                    segment.second.SetUnderlineStyle(wxTextAttr2::Underline_Normal);
+                    break;
+                case PANGO_UNDERLINE_DOUBLE:
+                    segment.second.SetUnderlineStyle(wxTextAttr2::Underline_Thick);
+                    break;
+                case PANGO_UNDERLINE_LOW:
+                    segment.second.SetFontUnderlined(true);
+                    break;
+                case PANGO_UNDERLINE_ERROR:
+                    segment.second.SetUnderlineStyle(wxTextAttr2::Underline_Wavy);
+                    break;
+                default:
+                    break;
+                }
+                ss << "ul(" << ai->value << ")";
+                break;
+            }
+            case PANGO_ATTR_UNDERLINE_COLOR:
+            {
+                PangoAttrColor *ac = (PangoAttrColor *)a;
+                PangoColor color = ac->color;
+                segment.second.SetUnderlineColour(wxColour(color.red>>8, color.green>>8, color.blue>>8));
+                ss << "ulc(" << color.red << "," << color.green << "," << color.blue << ")";
+                break;
+            }
+            default:
+                ss << "?";
+                break;
+            }
+            //ss << "]";
+            pango_attribute_destroy(a);
+        }
+        segments.push_back(segment);
+        ss << "],";
+        g_slist_free(alist);
+    } while(pango_attr_iterator_next(iter));
+    wxLogTrace("textinput", "`%s'(%d) attr:%s cursor:%d", str, (int)strlen(str), ss.str(), cursor_pos);
+
+    pango_attr_iterator_destroy(iter);
+    g_free(str);
+    pango_attr_list_unref(attrs);
+
+    wxTextInputEvent event;
+    event.m_textInputEventType = WXTI_TYPE_PREEDIT_CHANGED;
+    event.SetEventObject(window);
+    event.SetId(window->GetId());
+    event.m_compositionString = wxAttributedString(segments);
+
+    bool result = window->GTKProcessEvent(event);
+    return result;
+}
+
+static gboolean
+gtk_wxwindow_preedit_start_cb( GtkIMContext *WXUNUSED(context),
+       	                       wxWindow *WXUNUSED(window) )
+{
+    wxLogTrace("textinput","preedit_start");
+    return FALSE;
+}
+
+static gboolean
+gtk_wxwindow_preedit_end_cb( GtkIMContext *WXUNUSED(context),
+       	                     wxWindow *WXUNUSED(window) )
+{
+    wxLogTrace("textinput","preedit_end");
+    return FALSE;
+}
+
 }
 
 
@@ -2229,11 +2362,17 @@ void wxWindowGTK::GTKHandleRealized()
             // Create input method handler
             m_imContext = gtk_im_multicontext_new();
 
-            // Cannot handle drawing preedited text yet
-            gtk_im_context_set_use_preedit(m_imContext, false);
+            // The application should draw preedited text
+            gtk_im_context_set_use_preedit(m_imContext, true);
 
             g_signal_connect(m_imContext,
                 "commit", G_CALLBACK(gtk_wxwindow_commit_cb), this);
+            g_signal_connect(m_imContext,
+                "preedit-changed", G_CALLBACK(gtk_wxwindow_preedit_changed_cb), this);
+            g_signal_connect(m_imContext,
+                "preedit-start", G_CALLBACK(gtk_wxwindow_preedit_start_cb), this);
+            g_signal_connect(m_imContext,
+                "preedit-end", G_CALLBACK(gtk_wxwindow_preedit_end_cb), this);
         }
         gtk_im_context_set_client_window(m_imContext, window);
     }
