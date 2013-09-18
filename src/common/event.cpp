@@ -46,6 +46,10 @@
     #endif // wxUSE_GUI
 #endif
 
+#if wxUSE_GUI
+    #include "wx/attrstr.h"
+#endif
+
 #include "wx/thread.h"
 
 #if wxUSE_BASE
@@ -2014,6 +2018,35 @@ bool wxEventBlocker::ProcessEvent(wxEvent& event)
 
     return wxEvtHandler::ProcessEvent(event);;
 }
+
+// Implementation of wxAttributedString: SHOULD BE MOVED TO ITS OWN FILE! (something like attrstr.cpp)
+wxAttributedString::wxAttributedString()
+{
+}
+wxAttributedString::wxAttributedString(wxString string)
+    : m_segments(1, std::make_pair(string, wxTextAttr2()))
+{
+}
+wxAttributedString::wxAttributedString(std::vector<wxAttributedStringSegment> segments)
+    : m_segments(segments)
+{
+}
+
+wxString wxAttributedString::GetString() const
+{
+    wxString result;
+    for (std::vector<wxAttributedStringSegment>::const_iterator it = m_segments.begin(); it != m_segments.end(); ++it)
+    {
+        result += it->first;
+    }
+    return result;
+}
+
+std::vector<wxAttributedStringSegment> wxAttributedString::GetSegments() const
+{
+    return m_segments;
+}
+// End of implementation of wxAttributedString
 
 #endif // wxUSE_GUI
 
