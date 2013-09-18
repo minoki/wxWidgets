@@ -48,6 +48,7 @@
 
 #if wxUSE_GUI
     #include "wx/attrstr.h"
+    #include "wx/event_textinput.h"
 #endif
 
 #include "wx/thread.h"
@@ -107,6 +108,7 @@
     wxIMPLEMENT_DYNAMIC_CLASS(wxMouseCaptureChangedEvent, wxEvent);
     wxIMPLEMENT_DYNAMIC_CLASS(wxMouseCaptureLostEvent, wxEvent);
     wxIMPLEMENT_DYNAMIC_CLASS(wxClipboardTextEvent, wxCommandEvent);
+    wxIMPLEMENT_DYNAMIC_CLASS(wxTextInputEvent, wxEvent);
 #endif // wxUSE_GUI
 
 #if wxUSE_BASE
@@ -222,6 +224,7 @@ wxDEFINE_EVENT( wxEVT_KEY_UP, wxKeyEvent );
 #if wxUSE_HOTKEY
 wxDEFINE_EVENT( wxEVT_HOTKEY, wxKeyEvent );
 #endif
+wxDEFINE_EVENT( wxEVT_TEXT_INPUT, wxTextInputEvent );
 
 // Set cursor event
 wxDEFINE_EVENT( wxEVT_SET_CURSOR, wxSetCursorEvent );
