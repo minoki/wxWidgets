@@ -171,6 +171,15 @@ public :
 #endif
     virtual void                drawRect(void* rect, WXWidget slf, void* _cmd);
 
+    virtual void*               attributedSubstringForProposedRange(NSUInteger location, NSUInteger length, void* /* NSRange* */ actualRange, WXWidget slf, void* _cmd) /* -> NSAttributedString* */;
+    virtual NSUInteger          characterIndexForPoint(wxPoint pt, WXWidget slf, void* _cmd);
+    virtual wxRect              firstRectForCharacterRange(NSUInteger location, NSUInteger length, void* /* NSRange* */ actualRange, WXWidget slf, void* _cmd);
+    virtual bool                hasMarkedText(WXWidget slf, void* _cmd);
+    virtual void                markedRange(void* /* NSRange* */ result, WXWidget slf, void* _cmd);
+    virtual void                selectedRange(void* /* NSRange* */ result, WXWidget slf, void* _cmd);
+    virtual void                setMarkedText(void* /* id */ str, NSUInteger location, NSUInteger length, NSUInteger rlocation, NSUInteger rlength, WXWidget slf, void* _cmd);
+    virtual void                unmarkText(WXWidget slf, void* _cmd);
+
     virtual void                controlAction(WXWidget slf, void* _cmd, void* sender);
     virtual void                controlDoubleAction(WXWidget slf, void* _cmd, void *sender);
 

@@ -37,6 +37,8 @@
     #include "wx/tooltip.h"
 #endif
 
+#include "wx/event_textinput.h"
+
 #include <objc/objc-runtime.h>
 
 // Get the window with the focus
@@ -894,6 +896,7 @@ void wxOSX_insertText(NSView* self, SEL _cmd, NSString* text);
 
 - (void)insertText:(id)aString replacementRange:(NSRange)replacementRange
 {
+    //wxLogTrace("textinput", "insertText:%s replacementRange:(%lu,%lu)", [[aString description] UTF8String], replacementRange.location, replacementRange.length);
     wxOSX_insertText(self, @selector(insertText:), aString);
 }
 
@@ -906,48 +909,111 @@ void wxOSX_insertText(NSView* self, SEL _cmd, NSString* text);
 
 - (void)setMarkedText:(id)aString selectedRange:(NSRange)selectedRange replacementRange:(NSRange)replacementRange
 {
+    //wxLogTrace("textinput","setMarkedText:%s selectedRange:(%lu,%lu)", [[aString description] UTF8String], selectedRange.location, selectedRange.length);
+
+    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( self );
+    if (impl == NULL)
+        return;
+
+    impl->setMarkedText(aString, selectedRange.location, selectedRange.length, replacementRange.location, replacementRange.length, self, _cmd);
 }
 
 - (void)unmarkText
 {
+    //wxLogTrace("textinput","unmarkText");
+
+    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( self );
+    if (impl == NULL)
+        return;
+
+    impl->unmarkText(self, _cmd);
 }
 
 - (NSRange)selectedRange
-{    
-    return NSMakeRange(NSNotFound, 0);
+{
+    //wxLogTrace("textinput","selectedRange");
+
+    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( self );
+    if (impl == NULL)
+        return NSMakeRange(NSNotFound, 0);
+
+    NSRange result = NSMakeRange(NSNotFound, 0);
+    impl->selectedRange(&result, self, _cmd);
+
+    return result;
 }
 
 - (NSRange)markedRange
 {
-    return NSMakeRange(NSNotFound, 0);
+    //wxLogTrace("textinput","markedRange");
+
+    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( self );
+    if (impl == NULL)
+        return NSMakeRange(NSNotFound, 0);
+
+    NSRange result = NSMakeRange(NSNotFound, 0);
+    impl->markedRange(&result, self, _cmd);
+
+    return result;
 }
 
 - (BOOL)hasMarkedText
 {
-    return NO;
+    //wxLogTrace("textinput","hasMarkedText");
+    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( self );
+    if (impl == NULL)
+        return NO;
+
+    return impl->hasMarkedText(self, _cmd);
 }
 
 - (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange
 {
-    return nil;
+    //wxLogTrace("textinput","attributedSubstringFromRange:(%lu,%lu) actualRange:", aRange.location, aRange.length);
+
+    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( self );
+    if (impl == NULL)
+        return nil;
+
+    return (NSAttributedString *)impl->attributedSubstringForProposedRange(aRange.location, aRange.length, actualRange, self, _cmd);
 }
 
 - (NSArray*)validAttributesForMarkedText
 {
-    return nil;
+    //wxLogTrace("textinput","validAttributesForMarkedText");
+    return [NSArray arrayWithObjects:NSUnderlineStyleAttributeName,
+            NSUnderlineColorAttributeName,
+            NSForegroundColorAttributeName,
+            NSBackgroundColorAttributeName,
+            NSMarkedClauseSegmentAttributeName,
+            nil];
 }
 
 - (NSRect)firstRectForCharacterRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange
 {
-    return NSMakeRect(0, 0, 0, 0);
+    //wxLogTrace("textinput","firstRectForCharacterRange:(%lu,%lu)", aRange.location, aRange.length);
+
+    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( self );
+    if (impl == NULL)
+        return NSMakeRect(0, 0, 0, 0);
+
+    wxRect rect = impl->firstRectForCharacterRange(aRange.location, aRange.length, actualRange, self, _cmd);
+
+    return wxToNSRect(NULL, rect);
 }
 - (NSUInteger)characterIndexForPoint:(NSPoint)aPoint
 {
-    return NSNotFound;
+    //wxLogTrace("textinput","characterIndexForPoint:(%g,%g)",aPoint.x,aPoint.y);
+
+    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( self );
+    if (impl == NULL)
+        return NSNotFound;
+
+    wxPoint point = wxFromNSPoint(NULL, aPoint);
+    return impl->characterIndexForPoint(point, self, _cmd);
 }
 
 @end // wxNSView(TextInput)
-
 
 //
 // event handlers
@@ -1480,6 +1546,179 @@ void wxWidgetCocoaImpl::doCommandBySelector(void* sel, WXWidget slf, void* _cmd)
         }
     }
 }
+
+void* wxWidgetCocoaImpl::attributedSubstringForProposedRange(NSUInteger location, NSUInteger length, void* actualRange, WXWidget slf, void* _cmd)
+{
+    if (actualRange) {
+        *(NSRangePointer)actualRange = NSMakeRange(location, length);
+    }
+
+    wxTextInputEvent wxevent;
+    wxevent.m_textInputEventType = WXTI_TYPE_QUERY_SUBSTRING_FROM_RANGE;
+    wxevent.SetRange1(wxTextInputRange(location, length));
+    if (GetWXPeer()->HandleWindowEvent(wxevent)) {
+        // What to do?
+        //wxLogTrace("textinput","attributedSubstringFromRange handled");
+    } else {
+        //wxLogTrace("textinput","attributedSubstringFromRange not handled");
+    }
+    return nil;
+}
+NSUInteger wxWidgetCocoaImpl::characterIndexForPoint(wxPoint pt, WXWidget slf, void* _cmd)
+{
+    wxTextInputEvent wxevent;
+    wxevent.m_textInputEventType = WXTI_TYPE_QUERY_CHARINDEX_FOR_POINT;
+    wxevent.SetPoint(pt);
+    if (GetWXPeer()->HandleWindowEvent(wxevent)) {
+        //wxLogTrace("textinput","characterIndexForPoint handled");
+        return wxevent.GetULongResult();
+    } else {
+        //wxLogTrace("textinput","characterIndexForPoint not handled");
+    }
+    return NSNotFound;
+}
+wxRect wxWidgetCocoaImpl::firstRectForCharacterRange(NSUInteger location, NSUInteger length, void* actualRange, WXWidget slf, void* _cmd)
+{
+    if (actualRange) {
+        *(NSRangePointer)actualRange = NSMakeRange(location, length);
+    }
+
+    wxTextInputEvent wxevent;
+    wxevent.m_textInputEventType = WXTI_TYPE_QUERY_FIRSTRECT_FOR_CHARRANGE;
+    wxevent.SetRange1(wxTextInputRange(location, length));
+    if (GetWXPeer()->HandleWindowEvent(wxevent)) {
+        wxRect rect = wxevent.GetRectResult();
+        //wxLogTrace("textinput","firstRectForCharacterRange handled (%d,%d,%d,%d)", rect.GetLeft(), rect.GetTop(), rect.GetSize().GetWidth(), rect.GetSize().GetHeight());
+
+        wxPoint topLeft = GetWXPeer()->ClientToScreen(rect.GetTopLeft());
+        return wxRect(topLeft, rect.GetSize());
+    } else {
+        //wxLogTrace("textinput","firstRectForCharacterRange not handled");
+    }
+    return wxRect(0, 0, 0, 0);
+}
+bool wxWidgetCocoaImpl::hasMarkedText(WXWidget slf, void* _cmd)
+{
+    wxTextInputEvent wxevent;
+    wxevent.m_textInputEventType = WXTI_TYPE_QUERY_HASPREEDIT;
+    if (GetWXPeer()->HandleWindowEvent(wxevent)) {
+        return wxevent.m_booleanResult;
+    } else {
+        return false;
+    }
+}
+void wxWidgetCocoaImpl::markedRange(void* result, WXWidget slf, void* _cmd)
+{
+    NSRangePointer rangePointer = static_cast<NSRangePointer>(result);
+    *rangePointer = NSMakeRange(NSNotFound, 0);
+    wxTextInputEvent wxevent;
+    wxevent.m_textInputEventType = WXTI_TYPE_QUERY_PREEDIT_RANGE;
+    if (GetWXPeer()->HandleWindowEvent(wxevent)) {
+        //wxLogTrace("textinput","markedRange handled");
+        wxTextInputRange rangeResult = wxevent.GetRangeResult();
+        *rangePointer = NSMakeRange(rangeResult.GetLocation(), rangeResult.GetLength());
+    } else {
+        //wxLogTrace("textinput","markedRange not handled");
+    }
+}
+void wxWidgetCocoaImpl::selectedRange(void *result, WXWidget slf, void* _cmd)
+{
+    NSRangePointer rangePointer = static_cast<NSRangePointer>(result);
+    *rangePointer = NSMakeRange(NSNotFound, 0);
+    wxTextInputEvent wxevent;
+    wxevent.m_textInputEventType = WXTI_TYPE_QUERY_SELECTED_RANGE;
+    if (GetWXPeer()->HandleWindowEvent(wxevent)) {
+        //wxLogTrace("textinput","selectedRange handled (%u,%u)",wxevent.GetRangeResult().GetLocation(),wxevent.GetRangeResult().GetLength());
+        wxTextInputRange rangeResult = wxevent.GetRangeResult();
+        *rangePointer = NSMakeRange(rangeResult.GetLocation(), rangeResult.GetLength());
+    } else {
+        //wxLogTrace("textinput","selectedRange not handled");
+    }
+}
+
+// TODO: Find more appropriate place to place this function
+wxAttributedString wxAttributedStringFromNSAttributedString(NSAttributedString *str)
+{
+    std::vector<wxAttributedStringSegment> segments;
+    NSUInteger length = [str length];
+    NSString *string = [str string];
+    for (NSUInteger i = 0; i < length; )
+    {
+        NSRange range;
+        [str attribute:NSMarkedClauseSegmentAttributeName atIndex:i effectiveRange:&range];
+        NSString *substr = [string substringWithRange:range];
+        wxAttributedStringSegment segment;
+        segment.first = wxCFStringRef([substr retain]).AsString();
+        NSColor *foregroundColor = [str attribute:NSForegroundColorAttributeName atIndex:i effectiveRange:NULL];
+        if (foregroundColor)
+        {
+            foregroundColor = [foregroundColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
+            segment.second.SetTextColour(wxColour(foregroundColor));
+        }
+        NSColor *backgroundColor = [str attribute:NSBackgroundColorAttributeName atIndex:i effectiveRange:NULL];
+        if (backgroundColor)
+        {
+            backgroundColor = [backgroundColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
+            segment.second.SetBackgroundColour(wxColour(backgroundColor));
+        }
+        NSNumber *underlineStyle = [str attribute:NSUnderlineStyleAttributeName atIndex:i effectiveRange:NULL];
+        if (underlineStyle)
+        {
+            switch ([underlineStyle intValue]&(NSUnderlineStyleNone|NSUnderlineStyleSingle|NSUnderlineStyleThick|NSUnderlineStyleDouble))
+            {
+            case NSUnderlineStyleNone:
+                break;
+            case NSUnderlineStyleSingle:
+                segment.second.SetUnderlineStyle(wxTextAttr2::Underline_Normal);
+                break;
+            case NSUnderlineStyleThick:
+                segment.second.SetUnderlineStyle(wxTextAttr2::Underline_Thick);
+                break;
+            case NSUnderlineStyleDouble:
+                segment.second.SetUnderlineStyle(wxTextAttr2::Underline_Normal); // TODO
+                break;
+            }
+        }
+        NSColor *underlineColor = [str attribute:NSUnderlineColorAttributeName atIndex:i effectiveRange:NULL];
+        if (underlineColor)
+        {
+            underlineColor = [underlineColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
+            segment.second.SetUnderlineColour(wxColour(underlineColor));
+        }
+        segments.push_back(segment);
+        i += range.length;
+    }
+    return wxAttributedString(segments);
+}
+
+void wxWidgetCocoaImpl::setMarkedText(void* p, NSUInteger location, NSUInteger length, NSUInteger rlocation, NSUInteger rlength, WXWidget slf, void* _cmd)
+{
+    wxTextInputEvent wxevent;
+    wxevent.m_textInputEventType = WXTI_TYPE_PREEDIT_CHANGED;
+    if ([(id)p isKindOfClass:[NSAttributedString class]]) {
+        wxevent.m_compositionString = wxAttributedStringFromNSAttributedString((id)p);
+    } else {
+        NSString *str = (id)p;
+        wxevent.m_compositionString = wxCFStringRef([str retain]).AsString();
+    }
+    wxevent.SetRange1(wxTextInputRange(location, length));
+    if (GetWXPeer()->HandleWindowEvent(wxevent)) {
+        //wxLogTrace("textinput","setMarkedText handled");
+    } else {
+        //wxLogTrace("textinput","setMarkedText not handled");
+    }
+}
+void wxWidgetCocoaImpl::unmarkText(WXWidget slf, void* _cmd)
+{
+    wxTextInputEvent wxevent;
+    wxevent.m_textInputEventType = WXTI_TYPE_PREEDIT_CLEAR;
+    if (GetWXPeer()->HandleWindowEvent(wxevent)) {
+        //wxLogTrace("textinput","unmarkText handled");
+    } else {
+        //wxLogTrace("textinput","unmarkText not handled");
+    }
+}
+
 
 bool wxWidgetCocoaImpl::performKeyEquivalent(WX_NSEvent event, WXWidget slf, void *_cmd)
 {
@@ -2776,6 +3015,17 @@ bool wxWidgetCocoaImpl::DoHandleCharEvent(NSEvent *event, NSString *text)
     if ( peer )
     {
         const wxString str = wxCFStringRef([text retain]).AsString();
+        {
+            wxTextInputEvent wxevent;
+            wxevent.m_textInputEventType = WXTI_TYPE_PREEDIT_COMMITTED;
+            wxevent.m_compositionString = str;
+            wxevent.SetEventObject(peer);
+            wxevent.SetId(peer->GetId());
+            if (peer->HandleWindowEvent(wxevent))
+            {
+                return true;
+            }
+        }
         for ( wxString::const_iterator it = str.begin();
               it != str.end();
               ++it )
