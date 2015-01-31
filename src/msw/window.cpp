@@ -62,6 +62,7 @@
 #include "wx/power.h"
 #include "wx/scopeguard.h"
 #include "wx/sysopt.h"
+#include "wx/event_textinput.h"
 
 #if wxUSE_DRAG_AND_DROP
     #include "wx/dnd.h"
@@ -102,6 +103,8 @@
 #include "wx/listctrl.h"
 #include "wx/dynlib.h"
 
+#include <sstream>
+#include <iomanip>
 #include <string.h>
 
 #include <shellapi.h>
@@ -3121,6 +3124,7 @@ wxWindowMSW::MSWHandleMessage(WXLRESULT *result,
             break;
 
         case WM_IME_STARTCOMPOSITION:
+            wxLogTrace("textinput", "WM_IME_STARTCOMPOSITION");
             // IME popup needs Escape as it should undo the changes in its
             // entry window instead of e.g. closing the dialog for which the
             // IME is used (and losing all the changes in the IME window).
@@ -3128,7 +3132,167 @@ wxWindowMSW::MSWHandleMessage(WXLRESULT *result,
             break;
 
         case WM_IME_ENDCOMPOSITION:
+            wxLogTrace("textinput", "WM_IME_ENDCOMPOSITION");
             gs_modalEntryWindowCount--;
+            break;
+
+        case WM_IME_COMPOSITION:
+            {
+                std::ostringstream ss;
+                bool f = true;
+                LPARAM lp = lParam;
+#define ATTR(attr)                              \
+                if (lp & attr) {                \
+                    if (!f) {                   \
+                        ss << "|";              \
+                    } else {                    \
+                        f = false;              \
+                    }                           \
+                    ss << #attr;                \
+                    lp ^= attr;                 \
+                    }
+                ATTR(GCS_COMPATTR);
+                ATTR(GCS_COMPCLAUSE);
+                ATTR(GCS_COMPREADSTR);
+                ATTR(GCS_COMPREADATTR);
+                ATTR(GCS_COMPSTR);
+                ATTR(GCS_CURSORPOS);
+                ATTR(GCS_DELTASTART);
+                ATTR(GCS_RESULTCLAUSE);
+                ATTR(GCS_RESULTREADCLAUSE);
+                ATTR(GCS_RESULTREADSTR);
+                ATTR(GCS_RESULTSTR);
+                if (lp != 0) {
+                    if (!f) {
+                        ss << "|";
+                    }
+                    ss << std::setfill('0') << std::setw(4) << std::right << std::hex << (unsigned)lp;
+                }
+                wxLogTrace("textinput", "WM_IME_COMPOSITION lParam=%s", ss.str());
+            }
+            // TODO: HandleImeCompositionEvent function
+            if (lParam & GCS_RESULTSTR)
+            {
+                HIMC hIMC = ImmGetContext(GetHwnd());
+                LONG bufSize = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0);
+                assert(bufSize >= 0);
+                size_t len = (bufSize+sizeof(wxChar)-1)/sizeof(wxChar);
+                wxString resultStr;
+                ImmGetCompositionString(hIMC, GCS_RESULTSTR, wxStringBuffer(resultStr, len), bufSize+sizeof(wxChar));
+                wxTextInputEvent event;
+                event.m_textInputEventType = WXTI_TYPE_PREEDIT_COMMITTED;
+                event.m_compositionString = resultStr;
+                event.SetEventObject(this);
+                event.SetId(GetId());
+                wxLogTrace("textinput", "RESULTSTR %s", resultStr);
+                processed = HandleWindowEvent(event);
+            }
+            if (lParam & GCS_COMPSTR)
+            {
+                HIMC hIMC = ImmGetContext(GetHwnd());
+                LONG bufSize = ImmGetCompositionString(hIMC, GCS_COMPSTR, NULL, 0);
+                assert(bufSize >= 0);
+                size_t len = (bufSize+sizeof(wxChar)-1)/sizeof(wxChar);
+                wxString compStr;
+                ImmGetCompositionString(hIMC, GCS_COMPSTR, wxStringBuffer(compStr, len), bufSize+sizeof(wxChar));
+
+                LONG cursorPos = ImmGetCompositionString(hIMC, GCS_CURSORPOS, NULL, 0);
+
+                std::stringstream ss;
+                if ((lParam & GCS_COMPATTR) && (lParam & GCS_COMPCLAUSE))
+                {
+                    LONG bufSizeA = ImmGetCompositionString(hIMC, GCS_COMPATTR, NULL, 0);
+                    assert(bufSizeA >= 0);
+                    std::vector<unsigned char> bufA(bufSizeA);
+                    ImmGetCompositionString(hIMC, GCS_COMPATTR, &bufA[0], bufSizeA);
+                    LONG bufSizeC = ImmGetCompositionString(hIMC, GCS_COMPCLAUSE, NULL, 0);
+                    assert(bufSizeC >= 0);
+                    std::vector<DWORD> bufC((bufSizeC+sizeof(DWORD)-1)/sizeof(DWORD));
+                    ImmGetCompositionString(hIMC, GCS_COMPCLAUSE, &bufC[0], bufSizeC);
+
+                    std::vector<wxAttributedStringSegment> segments;
+                    DWORD i = 0;
+                    for (std::vector<DWORD>::iterator it = bufC.begin()+1; it != bufC.end(); ++it) {
+                        DWORD j = *it;
+                        wxString ss = compStr.SubString(i, j-1);
+                        wxAttributedStringSegment segment;
+                        segment.first = ss;
+                        switch (bufA[i]) {
+                        case ATTR_INPUT:
+                            segment.second.SetUnderlineStyle(wxTextAttr2::Underline_Wavy);
+                            break;
+                        case ATTR_INPUT_ERROR:
+                            break;
+                        case ATTR_TARGET_CONVERTED:
+                            segment.second.SetUnderlineStyle(wxTextAttr2::Underline_Thick);
+                            break;
+                        case ATTR_CONVERTED:
+                            segment.second.SetUnderlineStyle(wxTextAttr2::Underline_Normal);
+                            break;
+                        case ATTR_TARGET_NOTCONVERTED:
+                            segment.second.SetTextColour(*wxWHITE);
+                            segment.second.SetBackgroundColour(*wxLIGHT_GREY);
+                            break;
+                        case ATTR_FIXEDCONVERTED:
+                            break;
+                        default:
+                            break;
+                        }
+                        segments.push_back(segment);
+                        i = j;
+                    }
+
+                    wxTextInputEvent event;
+                    event.m_textInputEventType = WXTI_TYPE_PREEDIT_CHANGED;
+                    event.m_compositionString = wxAttributedString(segments);
+                    event.SetEventObject(this);
+                    event.SetId(GetId());
+                    processed = HandleWindowEvent(event) || processed;
+
+                    ss << "attr:";
+                    for (unsigned char val : bufA)
+                    {
+                        switch (val) {
+                        case ATTR_INPUT:
+                            ss << "[I]";
+                            break;
+                        case ATTR_INPUT_ERROR:
+                            ss << "[IE]";
+                            break;
+                        case ATTR_TARGET_CONVERTED:
+                            ss << "[TC]";
+                            break;
+                        case ATTR_CONVERTED:
+                            ss << "[C]";
+                            break;
+                        case ATTR_TARGET_NOTCONVERTED:
+                            ss << "[TNC]";
+                            break;
+                        case ATTR_FIXEDCONVERTED:
+                            ss << "[FC]";
+                            break;
+                        default:
+                            ss << "[" << (int)val << "]";
+                            //std::setfill('0') << std::setw(2) << std::right << std::hex << (int)val << ' ';
+                            break;
+                        }
+                    }
+                    ss << " ";
+                    ss << "clause:";
+                    for (DWORD val : bufC)
+                    {
+                        ss << val << ' ';
+                    }
+                } else {
+                    wxTextInputEvent event;
+                    event.m_textInputEventType = WXTI_TYPE_PREEDIT_CHANGED;
+                    event.m_compositionString = compStr;
+                    event.SetEventObject(this);
+                    event.SetId(GetId());
+                    processed = HandleWindowEvent(event) || processed;
+                }
+                wxLogTrace("textinput", "COMPSTR %s %s cursorpos:%d", compStr, ss.str(), cursorPos);
+            }
             break;
 
 #if wxUSE_HOTKEY
