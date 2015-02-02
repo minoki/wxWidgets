@@ -38,6 +38,7 @@
 #include "wx/dnd.h"
 #include "wx/stopwatch.h"
 #include "wx/versioninfo.h"
+#include "wx/event_textinput.h"
 
 #include "wx/textentry.h"
 #if wxUSE_TEXTCTRL
@@ -5431,6 +5432,7 @@ protected:
     void OnMouseWheel(wxMouseEvent& evt);
     void OnChar(wxKeyEvent& evt);
     void OnKeyDown(wxKeyEvent& evt);
+    void OnTextInput(wxTextInputEvent& evt);
     void OnLoseFocus(wxFocusEvent& evt);
     void OnGainFocus(wxFocusEvent& evt);
     void OnSysColourChanged(wxSysColourChangedEvent& evt);

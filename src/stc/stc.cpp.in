@@ -160,6 +160,7 @@ wxBEGIN_EVENT_TABLE(wxStyledTextCtrl, wxControl)
     EVT_MIDDLE_UP               (wxStyledTextCtrl::OnMouseMiddleUp)
     EVT_CHAR                    (wxStyledTextCtrl::OnChar)
     EVT_KEY_DOWN                (wxStyledTextCtrl::OnKeyDown)
+    EVT_TEXT_INPUT              (wxStyledTextCtrl::OnTextInput)
     EVT_KILL_FOCUS              (wxStyledTextCtrl::OnLoseFocus)
     EVT_SET_FOCUS               (wxStyledTextCtrl::OnGainFocus)
     EVT_SYS_COLOUR_CHANGED      (wxStyledTextCtrl::OnSysColourChanged)
@@ -853,6 +854,17 @@ void wxStyledTextCtrl::OnKeyDown(wxKeyEvent& evt) {
     int processed = m_swx->DoKeyDown(evt, &m_lastKeyDownConsumed);
     if (!processed && !m_lastKeyDownConsumed)
         evt.Skip();
+}
+
+
+void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
+    switch (evt.GetTextInputEventType()) {
+    case WXTI_TYPE_PREEDIT_CHANGED:
+    case WXTI_TYPE_PREEDIT_COMMITTED:
+    default:
+        evt.Skip();
+        break;
+    }
 }
 
 
