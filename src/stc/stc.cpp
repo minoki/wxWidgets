@@ -46,6 +46,7 @@
 #include "wx/tokenzr.h"
 #include "wx/mstream.h"
 #include "wx/image.h"
+#include "wx/ustring.h"
 #if wxUSE_FFILE
     #include "wx/ffile.h"
 #elif wxUSE_FILE
@@ -5345,7 +5346,37 @@ void wxStyledTextCtrl::OnKeyDown(wxKeyEvent& evt) {
 void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
     switch (evt.GetTextInputEventType()) {
     case WXTI_TYPE_PREEDIT_CHANGED:
+        {
+            if (m_swx->pdoc->TentativeActive()) {
+                m_swx->pdoc->TentativeUndo();
+            } else {
+                m_swx->ClearBeforeTentativeStart();
+            }
+            wxAttributedString attrstr = evt.GetCompositionString();
+            wxUString str = attrstr.GetString();
+            if (str.empty()) {
+                break;
+            }
+            m_swx->pdoc->TentativeStart();
+            for (wxUString::const_iterator it = str.begin(); it != str.end(); ++it) {
+                wxCharBuffer buf = wxUString(*it).utf8_str();
+                m_swx->AddCharUTF(buf.data(), buf.length());
+            }
+            break;
+        }
     case WXTI_TYPE_PREEDIT_COMMITTED:
+        {
+            if (m_swx->pdoc->TentativeActive()) {
+                m_swx->pdoc->TentativeUndo();
+            }
+            wxAttributedString attrstr = evt.GetCompositionString();
+            wxUString str = attrstr.GetString();
+            for (wxUString::const_iterator it = str.begin(); it != str.end(); ++it) {
+                wxCharBuffer buf = wxUString(*it).utf8_str();
+                m_swx->AddCharUTF(buf.data(), buf.length());
+            }
+            break;
+        }
     default:
         evt.Skip();
         break;

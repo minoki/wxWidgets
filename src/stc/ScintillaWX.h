@@ -227,6 +227,7 @@ private:
 #endif
 
     friend class wxSTCCallTip;
+    friend class wxStyledTextCtrl;
 };
 
 //----------------------------------------------------------------------
