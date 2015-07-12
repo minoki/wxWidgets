@@ -1400,6 +1400,8 @@ size_t wxMBConvUTF8::FromWChar(char *buf, size_t n,
         // cast is ok for WC_UTF16
         size_t pa = decode_utf16((const wxUint16 *)psz, cc);
         psz += (pa == wxCONV_FAILED) ? 1 : pa;
+        if (pa == 2 && !isNulTerminated)
+            srcLen--;
 #else
         cc = (*psz++) & 0x7fffffff;
 #endif
