@@ -538,20 +538,24 @@ const char *wxString::AsChar(const wxMBConv& conv) const
     const size_t lenWC = m_impl.length();
 #endif // wxUSE_UNICODE_UTF8/wxUSE_UNICODE_WCHAR
 
-    const size_t lenMB = conv.FromWChar(NULL, 0, strWC, lenWC);
-    if ( lenMB == wxCONV_FAILED )
+    // The length of the needed buffer
+    const size_t bufLenMB = conv.FromWChar(NULL, 0, strWC, lenWC);
+    if ( bufLenMB == wxCONV_FAILED )
         return NULL;
 
-    if ( !m_convertedToChar.m_str || lenMB != m_convertedToChar.m_len )
+    if ( !m_convertedToChar.m_str || bufLenMB != m_convertedToChar.m_len )
     {
-        if ( !const_cast<wxString *>(this)->m_convertedToChar.Extend(lenMB) )
+        if ( !const_cast<wxString *>(this)->m_convertedToChar.Extend(bufLenMB) )
             return NULL;
     }
 
-    m_convertedToChar.m_str[lenMB] = '\0';
-    if ( conv.FromWChar(m_convertedToChar.m_str, lenMB,
-                        strWC, lenWC) == wxCONV_FAILED )
+    const size_t lenMB = conv.FromWChar(m_convertedToChar.m_str, bufLenMB,
+                                        strWC, lenWC);
+    if ( lenMB == wxCONV_FAILED )
         return NULL;
+
+    m_convertedToChar.m_str[lenMB] = '\0';
+    const_cast<wxString *>(this)->m_convertedToChar.m_len = lenMB;
 
     return m_convertedToChar.m_str;
 }
