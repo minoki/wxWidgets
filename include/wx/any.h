@@ -159,9 +159,9 @@ private:
 public: \
     static bool IsSameClass(const wxAnyValueType* otherType) \
     { \
-        const wxAnyValueType& inst = *sm_instance.get(); \
-        const wxAnyValueType& otherRef = *otherType; \
-        return wxTypeId(inst) == wxTypeId(otherRef); \
+        wxCLANG_WARNING_SUPPRESS_IF_VALID(potentially-evaluated-expression) \
+        return wxTypeId(*sm_instance.get()) == wxTypeId(*otherType); \
+        wxCLANG_WARNING_RESTORE_IF_VALID(potentially-evaluated-expression) \
     } \
     virtual bool IsSameType(const wxAnyValueType* otherType) const wxOVERRIDE \
     { \
