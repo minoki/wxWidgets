@@ -1162,6 +1162,14 @@ public:
   wxString(const wxScopedWCharBuffer& buf)
     { assign(buf.data(), buf.length()); }
 
+  wxString(const wxScopedCharBuffer& buf, const wxMBConv& conv)
+  {
+    SubstrBufFromMB str(ImplStr(buf.data(), buf.length(), conv));
+    m_impl.assign(str.data, str.len);
+  }
+  wxString(const wxScopedWCharBuffer& buf, const wxMBConv& WXUNUSED(conv))
+    { assign(buf.data(), buf.length()); }
+
     // NB: this version uses m_impl.c_str() to force making a copy of the
     //     string, so that "wxString(str.c_str())" idiom for passing strings
     //     between threads works
