@@ -111,9 +111,7 @@ bool wxFFile::ReadAll(wxString *str, const wxMBConv& conv)
         return false;
     }
 
-    buf.data()[length] = 0;
-
-    wxString strTmp(buf, conv);
+    wxString strTmp(buf.data(), conv, length);
     str->swap(strTmp);
 
     return true;
