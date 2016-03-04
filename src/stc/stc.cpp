@@ -5412,6 +5412,37 @@ void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
             }
             break;
         }
+    case WXTI_TYPE_QUERY_PREEDIT_RANGE:
+        {
+            if (m_swx->pdoc->TentativeActive()) {
+                SelectionRange& rangeMain = m_swx->sel.RangeMain();
+                wxTextInputRange result;
+                result.m_location = rangeMain.Start().Position();
+                result.m_length = rangeMain.Length();
+                evt.SetRangeResult(result);
+            } else {
+                evt.Skip();
+            }
+            break;
+        }
+    case WXTI_TYPE_QUERY_SELECTED_RANGE:
+        {
+            SelectionRange& rangeMain = m_swx->sel.RangeMain();
+            wxTextInputRange result;
+            result.m_location = rangeMain.Start().Position();
+            result.m_length = rangeMain.Length();
+            evt.SetRangeResult(result);
+            break;
+        }
+    case WXTI_TYPE_QUERY_FIRSTRECT_FOR_CHARRANGE:
+        {
+            wxTextInputRange range = evt.GetRange1();
+            unsigned int location = range.GetLocation();
+            unsigned int length = range.GetLength();
+            Point pt = m_swx->LocationFromPosition(location);
+            evt.SetRectResult(wxRect(pt.x, pt.y, 0, m_swx->vs.lineHeight));
+            break;
+        }
     default:
         evt.Skip();
         break;
