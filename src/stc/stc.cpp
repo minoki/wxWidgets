@@ -61,6 +61,12 @@
 
 //----------------------------------------------------------------------
 
+enum {
+    SC_INDICATOR_NORMAL = INDIC_IME,
+    SC_INDICATOR_THICK,
+    SC_INDICATOR_WAVY
+};
+
 const char wxSTCNameStr[] = "stcwindow";
 
 #ifdef MAKELONG
@@ -230,6 +236,11 @@ bool wxStyledTextCtrl::Create(wxWindow *parent,
 
     // STC doesn't support RTL languages at all
     SetLayoutDirection(wxLayout_LeftToRight);
+
+    // Set indicators for IME
+    m_swx->vs.indicators[SC_INDICATOR_NORMAL] = Indicator(INDIC_COMPOSITIONTHIN, ColourDesired(0, 0, 0));
+    m_swx->vs.indicators[SC_INDICATOR_THICK] = Indicator(INDIC_COMPOSITIONTHICK, ColourDesired(0, 0, 0));
+    m_swx->vs.indicators[SC_INDICATOR_WAVY] = Indicator(INDIC_SQUIGGLE, ColourDesired(0, 0, 0));
 
     return true;
 }
@@ -5353,14 +5364,37 @@ void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
                 m_swx->ClearBeforeTentativeStart();
             }
             wxAttributedString attrstr = evt.GetCompositionString();
-            wxUString str = attrstr.GetString();
-            if (str.empty()) {
+            if (attrstr.GetString().empty()) {
                 break;
             }
             m_swx->pdoc->TentativeStart();
-            for (wxUString::const_iterator it = str.begin(); it != str.end(); ++it) {
-                wxCharBuffer buf = wxUString(*it).utf8_str();
-                m_swx->AddCharUTF(buf.data(), buf.length());
+            std::vector<wxAttributedStringSegment> const& segments = attrstr.GetSegments();
+            for (std::vector<wxAttributedStringSegment>::const_iterator it = segments.begin(); it != segments.end(); ++it) {
+                wxUString str = it->first;
+                wxTextAttr2 const& attr = it->second;
+                for (wxUString::const_iterator c = str.begin(); c != str.end(); ++c) {
+                    wxCharBuffer buf = wxUString(*c).utf8_str();
+                    m_swx->AddCharUTF(buf.data(), buf.length());
+                    if (attr.m_flags2 & wxTEXT_ATTR2_UNDERLINE_STYLE) {
+                        int indicator = 0;
+                        switch (attr.m_underlineStyle) {
+                        case wxTextAttr2::Underline_Normal:
+                            indicator = SC_INDICATOR_NORMAL;
+                            break;
+                        case wxTextAttr2::Underline_Thick:
+                            indicator = SC_INDICATOR_THICK;
+                            break;
+                        case wxTextAttr2::Underline_Wavy:
+                            indicator = SC_INDICATOR_WAVY;
+                            break;
+                        }
+                        m_swx->pdoc->decorations.SetCurrentIndicator(indicator);
+                        for (size_t r = 0; r < m_swx->sel.Count(); ++r) {
+                            int positionInsert = m_swx->sel.Range(r).Start().Position();
+                            m_swx->pdoc->DecorationFillRange(positionInsert - buf.length(), 1, buf.length());
+                        }
+                    }
+                }
             }
             break;
         }
