@@ -920,6 +920,7 @@ void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
             }
             wxAttributedString attrstr = evt.GetCompositionString();
             wxUString str = attrstr.GetString();
+            wxLogTrace("stc", "OnTextInput/committed: %%s", attrstr.GetString());
             for (wxUString::const_iterator it = str.begin(); it != str.end(); ++it) {
                 wxCharBuffer buf = wxUString(*it).utf8_str();
                 m_swx->AddCharUTF(buf.data(), buf.length());
