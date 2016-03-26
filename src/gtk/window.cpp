@@ -1117,10 +1117,6 @@ gtk_window_key_press_callback( GtkWidget *WXUNUSED(widget),
             ancestor = ancestor->GetParent();
         }
 #endif // wxUSE_ACCEL
-
-        // If not an accelerator, then emit KEY_DOWN event
-        if ( !ret )
-            ret = win->HandleWindowEvent( event );
     }
     else
     {
@@ -1152,6 +1148,11 @@ gtk_window_key_press_callback( GtkWidget *WXUNUSED(widget),
 
     if (return_after_IM)
         return FALSE;
+
+
+    // If not an accelerator and not consumed by IM, then emit KEY_DOWN event
+    if ( !ret )
+        ret = win->HandleWindowEvent( event );
 
     // Only send wxEVT_CHAR event if not processed yet. Thus, ALT-x
     // will only be sent if it is not in an accelerator table.
@@ -1214,6 +1215,20 @@ gtk_wxwindow_commit_cb (GtkIMContext * WXUNUSED(context),
 
 bool wxWindowGTK::GTKDoInsertTextFromIM(const char* str)
 {
+    const wxString data(wxGTK_CONV_BACK_SYS(str));
+
+    // If we have a corresponding key event, send wxEVT_KEY_DOWN now.
+    if ( m_imKeyEvent && data.size() == 1 && *data.begin() == m_imKeyEvent->keyval )
+    {
+        wxKeyEvent event( wxEVT_KEY_DOWN );
+        if( wxTranslateGTKKeyEventToWx(event, this, m_imKeyEvent) )
+        {
+            if (HandleWindowEvent( event )) {
+                return true;
+            }
+        }
+    }
+
     wxKeyEvent event( wxEVT_CHAR );
 
     // take modifiers, cursor position, timestamp etc. from the last
@@ -1227,7 +1242,6 @@ bool wxWindowGTK::GTKDoInsertTextFromIM(const char* str)
         event.SetEventObject(this);
     }
 
-    const wxString data(wxGTK_CONV_BACK_SYS(str));
     if( data.empty() )
         return false;
 
