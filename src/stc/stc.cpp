@@ -5365,8 +5365,10 @@ void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
             }
             wxAttributedString attrstr = evt.GetCompositionString();
             if (attrstr.GetString().empty()) {
+                wxLogTrace("stc", "OnTextInput/preedit_changed: empty");
                 break;
             }
+            wxLogTrace("stc", "OnTextInput/preedit_changed: %s", attrstr.GetString());
             m_swx->pdoc->TentativeStart();
             std::vector<wxAttributedStringSegment> const& segments = attrstr.GetSegments();
             for (std::vector<wxAttributedStringSegment>::const_iterator it = segments.begin(); it != segments.end(); ++it) {
