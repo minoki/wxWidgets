@@ -1233,6 +1233,18 @@ bool wxWindowGTK::GTKDoInsertTextFromIM(const char* str)
         }
     }
 
+    {
+        wxTextInputEvent commitevent;
+        commitevent.m_textInputEventType = WXTI_TYPE_PREEDIT_COMMITTED;
+        commitevent.m_compositionString = data;
+        commitevent.SetEventObject(this);
+        commitevent.SetId(GetId());
+        if (HandleWindowEvent(commitevent))
+        {
+            return true;
+        }
+    }
+
     wxKeyEvent event( wxEVT_CHAR );
 
     // take modifiers, cursor position, timestamp etc. from the last
