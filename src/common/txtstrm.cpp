@@ -322,7 +322,7 @@ wxTextInputStream& wxTextInputStream::operator>>(char& c)
     return *this;
 }
 
-#if wxUSE_UNICODE && wxWCHAR_T_IS_REAL_TYPE
+#if wxUSE_UNICODE
 
 wxTextInputStream& wxTextInputStream::operator>>(wchar_t& wc)
 {
@@ -604,7 +604,7 @@ wxTextOutputStream& wxTextOutputStream::operator<<(char c)
     return *this;
 }
 
-#if wxUSE_UNICODE && wxWCHAR_T_IS_REAL_TYPE
+#if wxUSE_UNICODE
 
 wxTextOutputStream& wxTextOutputStream::operator<<(wchar_t wc)
 {

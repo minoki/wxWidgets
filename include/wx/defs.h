@@ -1297,7 +1297,7 @@ typedef double wxDouble;
         is defined.
      */
 #   if defined(__VISUALC__) && !defined(_NATIVE_WCHAR_T_DEFINED)
-#       define wxWCHAR_T_IS_REAL_TYPE 0
+#       error "wchar_t is not a real type. Compile with /Zc:wchar_t option."
 #   else /* compiler having standard-conforming wchar_t */
 #       define wxWCHAR_T_IS_REAL_TYPE 1
 #   endif
@@ -1305,11 +1305,7 @@ typedef double wxDouble;
 
 /* Helper macro for doing something dependent on whether wchar_t is or isn't a
    typedef inside another macro. */
-#if wxWCHAR_T_IS_REAL_TYPE
-    #define wxIF_WCHAR_T_TYPE(x) x
-#else /* !wxWCHAR_T_IS_REAL_TYPE */
-    #define wxIF_WCHAR_T_TYPE(x)
-#endif /* wxWCHAR_T_IS_REAL_TYPE/!wxWCHAR_T_IS_REAL_TYPE */
+#define wxIF_WCHAR_T_TYPE(x) x
 
 /*
    This constant should be used instead of NULL in vararg functions taking
@@ -1355,7 +1351,7 @@ typedef double wxDouble;
     m(unsigned long) \
     wxIF_LONG_LONG_TYPE( m(wxLongLong_t) ) \
     wxIF_LONG_LONG_TYPE( m(wxULongLong_t) ) \
-    wxIF_WCHAR_T_TYPE( m(wchar_t) )
+    m(wchar_t)
 
 /*
     Same as wxDO_FOR_INT_TYPES() but does include char and unsigned char.
@@ -1385,7 +1381,7 @@ typedef double wxDouble;
     m(unsigned long, arg) \
     wxIF_LONG_LONG_TYPE( m(wxLongLong_t, arg) ) \
     wxIF_LONG_LONG_TYPE( m(wxULongLong_t, arg) ) \
-    wxIF_WCHAR_T_TYPE( m(wchar_t, arg) )
+    m(wchar_t, arg)
 
 /*
     Combination of wxDO_FOR_CHAR_INT_TYPES() and wxDO_FOR_INT_TYPES_1():
