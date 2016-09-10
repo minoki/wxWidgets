@@ -3315,6 +3315,77 @@ wxWindowMSW::MSWHandleMessage(WXLRESULT *result,
             }
             break;
 
+        case WM_IME_REQUEST:
+            {
+                switch (wParam) {
+                case IMR_CANDIDATEWINDOW:
+                    wxLogTrace("textinput", "WM_IME_REQUEST: IMR_CANDIDATEWINDOW");
+                    break;
+                case IMR_COMPOSITIONFONT:
+                    wxLogTrace("textinput", "WM_IME_REQUEST: IMR_COMPOSITIONFONT");
+                    break;
+                case IMR_COMPOSITIONWINDOW:
+                    wxLogTrace("textinput", "WM_IME_REQUEST: IMR_COMPOSITIONWINDOW");
+                    break;
+                case IMR_CONFIRMRECONVERTSTRING:
+                    wxLogTrace("textinput", "WM_IME_REQUEST: IMR_CONFIRMRECONVERTSTRING");
+                    break;
+                case IMR_DOCUMENTFEED:
+                    wxLogTrace("textinput", "WM_IME_REQUEST: IMR_DOCUMENTFEED");
+                    break;
+                case IMR_QUERYCHARPOSITION:
+                    {
+                        IMECHARPOSITION *position = reinterpret_cast<IMECHARPOSITION *>(lParam);
+                        if (position) {
+                            wxTextInputEvent event1;
+                            event1.m_textInputEventType = WXTI_TYPE_QUERY_PREEDIT_RANGE;
+                            if (HandleWindowEvent(event1)) {
+                                wxTextInputEvent event2;
+                                event2.m_textInputEventType = WXTI_TYPE_QUERY_FIRSTRECT_FOR_CHARRANGE;
+                                // TODO: dwCharPos is in UTF-16 units, but...?
+                                event2.SetRange1(wxTextInputRange(event1.GetRangeResult().GetLocation() + position->dwCharPos, 0));
+                                wxLogTrace("textinput", "WM_IME_REQUEST: IMR_QUERYCHARPOSITION char pos=%u", (unsigned int)position->dwCharPos);
+                                if (HandleWindowEvent(event2)) {
+                                    wxRect rect = event2.GetRectResult();
+                                    wxLogTrace("textinput", "WM_IME_REQUEST: IMR_QUERYCHARPOSITION rect=(%d,%d,%d,%d)", rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight());
+                                    {
+                                        wxPoint topLeft = rect.GetTopLeft();
+                                        ClientToScreen(topLeft);
+                                        position->pt.x = topLeft.x;
+                                        position->pt.y = topLeft.y;
+                                    }
+                                    position->cLineHeight = rect.GetHeight();
+                                    {
+                                        // Assume that the editing area is the whole client rectangle.
+                                        wxRect clientRect(GetScreenPosition(), GetClientSize());
+                                        wxCopyRectToRECT(clientRect, position->rcDocument);
+                                    }
+                                    rc.result = TRUE;
+                                    processed = true;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                case IMR_RECONVERTSTRING:
+                    {
+                        wxLogTrace("textinput", "WM_IME_REQUEST: IMR_RECONVERTSTRING");
+                        RECONVERTSTRING *rs = reinterpret_cast<RECONVERTSTRING *>(lParam);
+                        if (rs == NULL) {
+                            // Return the size of the buffer
+                            //return sizeof(RECONVERTSTRING) + sizeof(TCHAR) * 0;
+                        } else {
+                            BYTE *buffer = reinterpret_cast<BYTE *>(lParam) + rs->dwStrOffset;
+                        }
+                        break;
+                    }
+                default:
+                    wxLogTrace("textinput", "WM_IME_REQUEST: wParam=%04x", (unsigned int)wParam);
+                    break;
+                }
+                break;
+            }
+
 #if wxUSE_HOTKEY
         case WM_HOTKEY:
             processed = HandleHotKey(wParam, lParam);
