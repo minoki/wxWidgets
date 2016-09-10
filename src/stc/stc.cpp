@@ -5371,6 +5371,8 @@ void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
             wxLogTrace("stc", "OnTextInput/preedit_changed: %s", attrstr.GetString());
             m_swx->pdoc->TentativeStart();
             std::vector<wxAttributedStringSegment> const& segments = attrstr.GetSegments();
+            int anchor = m_swx->sel.RangeMain().Start().Position();
+            int caret = anchor;
             for (std::vector<wxAttributedStringSegment>::const_iterator it = segments.begin(); it != segments.end(); ++it) {
                 wxUString str = it->first;
                 wxTextAttr2 const& attr = it->second;
@@ -5395,6 +5397,7 @@ void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
                 }
                 for (wxUString::const_iterator c = str.begin(); c != str.end(); ++c) {
                     wxCharBuffer buf = wxUString(*c).utf8_str();
+                    caret += buf.length();
                     m_swx->AddCharUTF(buf.data(), buf.length());
                     m_swx->pdoc->decorations.SetCurrentIndicator(indicator);
                     for (size_t r = 0; r < m_swx->sel.Count(); ++r) {
@@ -5403,6 +5406,7 @@ void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
                     }
                 }
             }
+            m_swx->m_preeditRange = SelectionRange(caret, anchor);
             break;
         }
     case WXTI_TYPE_PREEDIT_COMMITTED:
@@ -5422,10 +5426,10 @@ void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
     case WXTI_TYPE_QUERY_PREEDIT_RANGE:
         {
             if (m_swx->pdoc->TentativeActive()) {
-                SelectionRange& rangeMain = m_swx->sel.RangeMain();
+                SelectionRange preeditRange = m_swx->m_preeditRange;
                 wxTextInputRange result;
-                result.m_location = rangeMain.Start().Position();
-                result.m_length = rangeMain.Length();
+                result.m_location = preeditRange.Start().Position();
+                result.m_length = preeditRange.Length();
                 evt.SetRangeResult(result);
             } else {
                 evt.Skip();

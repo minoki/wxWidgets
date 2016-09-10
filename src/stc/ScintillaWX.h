@@ -226,6 +226,8 @@ private:
     wxDataFormat m_clipRectTextFormat;
 #endif
 
+    SelectionRange m_preeditRange;
+
     friend class wxSTCCallTip;
     friend class wxStyledTextCtrl;
 };
