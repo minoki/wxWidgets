@@ -29,7 +29,8 @@ TEST_CXXFLAGS = /M$(__RUNTIME_LIBS_10)$(__DEBUGRUNTIME) /DWIN32 $(__DEBUGINFO) \
 	$(__UNICODE_DEFINE_p) /I$(SETUPHDIR) /I.\..\include \
 	$(____CAIRO_INCLUDEDIR_FILENAMES) /W4 /I. $(__DLLFLAG_p) /D_CONSOLE \
 	/DwxUSE_GUI=0 $(CPPUNIT_CFLAGS) $(__RTTIFLAG) $(__EXCEPTIONSFLAG) \
-	/Yu"testprec.h" /Fp"$(OBJS)\testprec_test.pch" $(CPPFLAGS) $(CXXFLAGS)
+	/Zc:wchar_t /Yu"testprec.h" /Fp"$(OBJS)\testprec_test.pch" $(CPPFLAGS) \
+	$(CXXFLAGS)
 TEST_OBJECTS =  \
 	$(OBJS)\test_dummy.obj \
 	$(OBJS)\test_test.obj \
@@ -125,8 +126,8 @@ TEST_DRAWING_CXXFLAGS = /M$(__RUNTIME_LIBS_27)$(__DEBUGRUNTIME) /DWIN32 \
 	$(__THREAD_DEFINE_p) $(__UNICODE_DEFINE_p) /I$(SETUPHDIR) /I.\..\include \
 	$(____CAIRO_INCLUDEDIR_FILENAMES) /W4 /I. $(__DLLFLAG_p) /D_CONSOLE \
 	/DwxUSE_GUI=0 $(CPPUNIT_CFLAGS) $(__RTTIFLAG) $(__EXCEPTIONSFLAG) \
-	/Yu"testprec.h" /Fp"$(OBJS)\testprec_test_drawing.pch" $(CPPFLAGS) \
-	$(CXXFLAGS)
+	/Zc:wchar_t /Yu"testprec.h" /Fp"$(OBJS)\testprec_test_drawing.pch" \
+	$(CPPFLAGS) $(CXXFLAGS)
 TEST_DRAWING_OBJECTS =  \
 	$(OBJS)\test_drawing_dummy.obj \
 	$(OBJS)\test_drawing_test.obj \
@@ -142,7 +143,7 @@ TEST_DRAWINGPLUGIN_CXXFLAGS = /M$(__RUNTIME_LIBS_45)$(__DEBUGRUNTIME) /DWIN32 \
 	$(__NDEBUG_DEFINE_p) $(__EXCEPTIONS_DEFINE_p) $(__RTTI_DEFINE_p) \
 	$(__THREAD_DEFINE_p) $(__UNICODE_DEFINE_p) /I$(SETUPHDIR) /I.\..\include \
 	$(____CAIRO_INCLUDEDIR_FILENAMES) /W4 $(__DLLFLAG_p) $(__RTTIFLAG) \
-	$(__EXCEPTIONSFLAG) $(CPPFLAGS) $(CXXFLAGS)
+	$(__EXCEPTIONSFLAG) /Zc:wchar_t $(CPPFLAGS) $(CXXFLAGS)
 TEST_DRAWINGPLUGIN_OBJECTS =  \
 	$(OBJS)\test_drawingplugin_pluginsample.obj
 TEST_GUI_CXXFLAGS = /M$(__RUNTIME_LIBS_59)$(__DEBUGRUNTIME) /DWIN32 \
@@ -154,7 +155,8 @@ TEST_GUI_CXXFLAGS = /M$(__RUNTIME_LIBS_59)$(__DEBUGRUNTIME) /DWIN32 \
 	$(__THREAD_DEFINE_p) $(__UNICODE_DEFINE_p) /I$(SETUPHDIR) /I.\..\include \
 	$(____CAIRO_INCLUDEDIR_FILENAMES) /W4 /I. $(__DLLFLAG_p) /I.\..\samples \
 	/DNOPCH $(CPPUNIT_CFLAGS) /D_CONSOLE $(__RTTIFLAG) $(__EXCEPTIONSFLAG) \
-	/Yu"testprec.h" /Fp"$(OBJS)\testprec_test_gui.pch" $(CPPFLAGS) $(CXXFLAGS)
+	/Zc:wchar_t /Yu"testprec.h" /Fp"$(OBJS)\testprec_test_gui.pch" $(CPPFLAGS) \
+	$(CXXFLAGS)
 TEST_GUI_OBJECTS =  \
 	$(OBJS)\test_gui_dummy.obj \
 	$(OBJS)\test_gui_asserthelper.obj \

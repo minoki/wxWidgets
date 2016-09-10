@@ -26,6 +26,7 @@
 			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zc:wchar_t"
 				Optimization="0"
 				AdditionalIncludeDirectories=".\..\..\lib\vc_dll\mswud;.\..\..\include"
 				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;_DEBUG;__WXMSW__;_UNICODE;WXUSINGDLL"
@@ -90,6 +91,7 @@
 			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zc:wchar_t"
 				Optimization="2"
 				AdditionalIncludeDirectories=".\..\..\lib\vc_dll\mswu;.\..\..\include"
 				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;__WXMSW__;NDEBUG;_UNICODE;WXUSINGDLL"

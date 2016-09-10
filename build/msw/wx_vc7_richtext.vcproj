@@ -26,6 +26,7 @@
 			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zc:wchar_t"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\lib\vc_lib\mswud;..\..\include;..\..\src\tiff\libtiff;..\..\src\jpeg;..\..\src\png;..\..\src\zlib;..\..\src\regex;..\..\src\expat\lib"
 				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;__WXMSW__;_UNICODE;WXBUILDING"
@@ -86,6 +87,7 @@
 			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zc:wchar_t"
 				Optimization="2"
 				AdditionalIncludeDirectories="..\..\lib\vc_lib\mswu;..\..\include;..\..\src\tiff\libtiff;..\..\src\jpeg;..\..\src\png;..\..\src\zlib;..\..\src\regex;..\..\src\expat\lib"
 				PreprocessorDefinitions="WIN32;_LIB;__WXMSW__;NDEBUG;_UNICODE;WXBUILDING"
@@ -143,6 +145,7 @@
 			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zc:wchar_t"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\lib\vc_dll\mswud;..\..\include;..\..\src\tiff\libtiff;..\..\src\jpeg;..\..\src\png;..\..\src\zlib;..\..\src\regex;..\..\src\expat\lib"
 				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;_DEBUG;__WXMSW__;_UNICODE;WXBUILDING;WXUSINGDLL;WXMAKINGDLL_RICHTEXT"
@@ -211,6 +214,7 @@
 			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zc:wchar_t"
 				Optimization="2"
 				AdditionalIncludeDirectories="..\..\lib\vc_dll\mswu;..\..\include;..\..\src\tiff\libtiff;..\..\src\jpeg;..\..\src\png;..\..\src\zlib;..\..\src\regex;..\..\src\expat\lib"
 				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;__WXMSW__;NDEBUG;_UNICODE;WXBUILDING;WXUSINGDLL;WXMAKINGDLL_RICHTEXT"

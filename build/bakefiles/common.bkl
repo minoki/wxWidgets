@@ -515,6 +515,7 @@ $(TAB)cl /EP /nologo "$(DOLLAR)(InputPath)" > "$(SETUPHDIR)\wx\msw\rcdefs.h"
         <lib-path>$(LIBDIRNAME)</lib-path>
 
         <warnings>max</warnings>
+        <cxxflags cond="FORMAT=='msvs2003prj' or FORMAT=='msvc'">/Zc:wchar_t</cxxflags>
         <cxxflags cond="FORMAT=='autoconf'">$(CXXWARNINGS)</cxxflags>
         <cppflags-watcom>
             -wcd=549 <!-- 'sizeof' operand contains compiler generated information -->

@@ -26,6 +26,7 @@
 			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zc:wchar_t"
 				Optimization="0"
 				AdditionalIncludeDirectories=".\..\lib\vc_lib\mswud;.\..\include;.;.\..\samples"
 				PreprocessorDefinitions="WIN32;_DEBUG;__WXMSW__;_UNICODE;NOPCH;_CONSOLE"
@@ -94,6 +95,7 @@
 			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zc:wchar_t"
 				Optimization="2"
 				AdditionalIncludeDirectories=".\..\lib\vc_lib\mswu;.\..\include;.;.\..\samples"
 				PreprocessorDefinitions="WIN32;__WXMSW__;NDEBUG;_UNICODE;NOPCH;_CONSOLE"
@@ -161,6 +163,7 @@
 			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zc:wchar_t"
 				Optimization="0"
 				AdditionalIncludeDirectories=".\..\lib\vc_dll\mswud;.\..\include;.;.\..\samples"
 				PreprocessorDefinitions="WIN32;_DEBUG;__WXMSW__;_UNICODE;WXUSINGDLL;NOPCH;_CONSOLE"
@@ -229,6 +232,7 @@
 			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zc:wchar_t"
 				Optimization="2"
 				AdditionalIncludeDirectories=".\..\lib\vc_dll\mswu;.\..\include;.;.\..\samples"
 				PreprocessorDefinitions="WIN32;__WXMSW__;NDEBUG;_UNICODE;WXUSINGDLL;NOPCH;_CONSOLE"
