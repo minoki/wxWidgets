@@ -3293,6 +3293,26 @@ wxWindowMSW::MSWHandleMessage(WXLRESULT *result,
                 }
                 wxLogTrace("textinput", "COMPSTR %s %s cursorpos:%d", compStr, ss.str(), cursorPos);
             }
+            {
+                wxTextInputEvent event1;
+                event1.m_textInputEventType = WXTI_TYPE_QUERY_PREEDIT_RANGE;
+                event1.SetEventObject(this);
+                event1.SetId(GetId());
+                if (HandleWindowEvent(event1)) {
+                    wxTextInputEvent event2;
+                    event2.m_textInputEventType = WXTI_TYPE_QUERY_FIRSTRECT_FOR_CHARRANGE;
+                    event2.m_rangeParam1 = event1.m_rangeResult;
+                    event2.SetEventObject(this);
+                    event2.SetId(GetId());
+                    if (HandleWindowEvent(event2)) {
+                        HIMC hIMC = ImmGetContext(GetHwnd());
+                        CANDIDATEFORM candidateForm = {0};
+                        candidateForm.dwStyle = CFS_EXCLUDE;
+                        wxCopyRectToRECT(event2.m_rectResult, candidateForm.rcArea);
+                        ImmSetCandidateWindow(hIMC, &candidateForm);
+                    }
+                }
+            }
             break;
 
 #if wxUSE_HOTKEY
