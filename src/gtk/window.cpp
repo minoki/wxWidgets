@@ -44,6 +44,7 @@
 #include "wx/gtk/private/gtk2-compat.h"
 #include "wx/gtk/private/event.h"
 #include "wx/gtk/private/win_gtk.h"
+#include "wx/gtk/private/gdkconv.h"
 #include "wx/private/textmeasure.h"
 using namespace wxGTKImpl;
 
@@ -1401,6 +1402,26 @@ gtk_wxwindow_preedit_changed_cb( GtkIMContext *context,
     event.m_compositionString = wxAttributedString(segments);
 
     bool result = window->GTKProcessEvent(event);
+
+    {
+        wxTextInputEvent event1;
+        event1.m_textInputEventType = WXTI_TYPE_QUERY_PREEDIT_RANGE;
+        event1.SetEventObject(window);
+        event1.SetId(window->GetId());
+        if (window->HandleWindowEvent(event1)) {
+            wxTextInputEvent event2;
+            event2.m_textInputEventType = WXTI_TYPE_QUERY_FIRSTRECT_FOR_CHARRANGE;
+            event2.m_rangeParam1 = event1.m_rangeResult;
+            event2.SetEventObject(window);
+            event2.SetId(window->GetId());
+            if (window->HandleWindowEvent(event2)) {
+                GdkRectangle area;
+                wxRectToGDKRect(event2.m_rectResult, area);
+                gtk_im_context_set_cursor_location(context, &area);
+            }
+        }
+    }
+
     return result;
 }
 
