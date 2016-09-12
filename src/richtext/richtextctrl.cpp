@@ -171,6 +171,7 @@ wxBEGIN_EVENT_TABLE(wxRichTextCtrl, wxControl)
     EVT_LEFT_DCLICK(wxRichTextCtrl::OnLeftDClick)
     EVT_CHAR(wxRichTextCtrl::OnChar)
     EVT_KEY_DOWN(wxRichTextCtrl::OnChar)
+    EVT_TEXT_INPUT(wxRichTextCtrl::OnTextInput)
     EVT_SIZE(wxRichTextCtrl::OnSize)
     EVT_SET_FOCUS(wxRichTextCtrl::OnSetFocus)
     EVT_KILL_FOCUS(wxRichTextCtrl::OnKillFocus)
@@ -1515,6 +1516,37 @@ void wxRichTextCtrl::OnChar(wxKeyEvent& event)
             }
         }
     }
+}
+
+void wxRichTextCtrl::OnTextInput(wxTextInputEvent& event)
+{
+    if (event.GetTextInputEventType() != WXTI_TYPE_PREEDIT_COMMITTED) {
+        event.Skip();
+        return;
+    }
+
+    if ( !IsEditable() )
+    {
+        event.Skip();
+        return;
+    }
+
+    // TODO: Issue events linke wxEVT_RICHTEXT_CONSUMING_CHARACTER or wxEVT_RICHTEXT_CHARACTER
+
+    BeginBatchUndo(_("Insert Text"));
+
+    long newPos = m_caretPosition;
+    DeleteSelectedContent(& newPos);
+
+    wxString str = event.GetCompositionString().GetString();
+    GetFocusObject()->InsertTextWithUndo(& GetBuffer(), newPos+1, str, this, 0);
+
+    EndBatchUndo();
+
+    SetDefaultStyleToCursorStyle();
+    ScrollIntoView(m_caretPosition, WXK_RIGHT);
+
+    Update();
 }
 
 bool wxRichTextCtrl::ProcessMouseMovement(wxRichTextParagraphLayoutBox* container, wxRichTextObject* WXUNUSED(obj), long position, const wxPoint& WXUNUSED(pos))

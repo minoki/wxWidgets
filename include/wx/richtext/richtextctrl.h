@@ -19,6 +19,7 @@
 #include "wx/caret.h"
 #include "wx/timer.h"
 #include "wx/textctrl.h"
+#include "wx/event_textinput.h"
 
 #if wxUSE_DRAG_AND_DROP
 #include "wx/dnd.h"
@@ -1910,6 +1911,9 @@ public:
 
     // Key press
     void OnChar(wxKeyEvent& event);
+
+    // Text input
+    void OnTextInput(wxTextInputEvent& event);
 
     // Sizing
     void OnSize(wxSizeEvent& event);
