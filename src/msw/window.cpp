@@ -390,6 +390,8 @@ void wxWindowMSW::Init()
     m_mouseInWindow = false;
     m_lastKeydownProcessed = false;
 
+    m_lastCodeUnit = 0;
+
     m_hWnd = 0;
 
     m_xThumbSize = 0;
@@ -3119,7 +3121,15 @@ wxWindowMSW::MSWHandleMessage(WXLRESULT *result,
             }
             else
             {
-                processed = HandleChar((WORD)wParam, lParam);
+                wxLogTrace("textinput", "WM_CHAR %04x", (unsigned int)wParam);
+                // Some software keyboard send surrogate pairs with WM_CHAR, even though there is WM_UNICHAR
+                if (0xD800 <= wParam && wParam <= 0xDC00) {
+                    // Lead surrogate
+                    m_lastCodeUnit = wParam;
+                } else {
+                    processed = HandleChar((WORD)wParam, lParam);
+                    m_lastCodeUnit = 0;
+                }
             }
             break;
 
@@ -5847,9 +5857,13 @@ wxWindowMSW::CreateCharEvent(wxEventType evType,
     InitAnyKeyEvent(event, wParam, lParam);
 
 #if wxUSE_UNICODE
-    // TODO: wParam uses UTF-16 so this is incorrect for characters outside of
-    //       the BMP, we should use WM_UNICHAR to handle them.
-    event.m_uniChar = wParam;
+    if (0xD800 <= m_lastCodeUnit && m_lastCodeUnit < 0xDC00 && 0xDC00 <= wParam && wParam < 0xE000) {
+        // Decode UTF-16
+        event.m_uniChar = ((static_cast<int>(m_lastCodeUnit - 0xD800) << 10) | static_cast<int>(wParam - 0xDC00)) + 0x10000;
+        wxLogTrace("textinput", "WM_CHAR Unicode value: %x", (unsigned int)event.m_uniChar);
+    } else {
+        event.m_uniChar = wParam;
+    }
 #endif // wxUSE_UNICODE
 
     // Set non-Unicode key code too for compatibility if possible.

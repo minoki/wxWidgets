@@ -594,6 +594,9 @@ protected:
     bool                  m_mouseInWindow:1;
     bool                  m_lastKeydownProcessed:1;
 
+    // we need to keep the value from the last WM_CHAR if it was a lead surrogate
+    wxChar                m_lastCodeUnit;
+
     // the size of one page for scrolling
     int                   m_xThumbSize;
     int                   m_yThumbSize;
