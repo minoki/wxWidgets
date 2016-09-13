@@ -1048,11 +1048,28 @@ void ScintillaWX::DoMiddleButtonUp(Point WXUNUSED(pt)) {
 
 void ScintillaWX::DoAddChar(int key) {
 #if wxUSE_UNICODE
-    wxChar wszChars[2];
-    wszChars[0] = (wxChar)key;
-    wszChars[1] = 0;
-    const wxCharBuffer buf(wx2stc(wszChars));
-    AddCharUTF(buf, buf.length());
+    char buf[5] = {0};
+    size_t len = 0;
+    if (key < 0x80) {
+        buf[0] = wx_truncate_cast(char, key);
+        len = 1;
+    } else if (key < 0x800) {
+        buf[0] = 0xc0 | (key >> 6);
+        buf[1] = 0x80 | (key & 0x3f);
+        len = 2;
+    } else if (key < 0x10000) {
+        buf[0] = 0xe0 | (key >> 12);
+        buf[1] = 0x80 | ((key >> 6) & 0x3f);
+        buf[2] = 0x80 | (key & 0x3f);
+        len = 3;
+    } else {
+        buf[0] = 0xf0 | (key >> 18);
+        buf[1] = 0x80 | ((key >> 12) & 0x3f);
+        buf[2] = 0x80 | ((key >> 6) & 0x3f);
+        buf[3] = 0x80 | (key & 0x3f);
+        len = 4;
+    }
+    AddCharUTF(buf, len);
 #else
     AddChar((char)key);
 #endif
