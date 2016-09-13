@@ -3123,6 +3123,14 @@ wxWindowMSW::MSWHandleMessage(WXLRESULT *result,
             }
             break;
 
+        case WM_UNICHAR:
+            wxLogTrace("textinput", "WM_UNICHAR %04x", (unsigned int)wParam);
+            break;
+
+        case WM_IME_CHAR:
+            wxLogTrace("textinput", "WM_IME_CHAR %04x", (unsigned int)wParam);
+            break;
+
         case WM_IME_STARTCOMPOSITION:
             wxLogTrace("textinput", "WM_IME_STARTCOMPOSITION");
             // IME popup needs Escape as it should undo the changes in its
