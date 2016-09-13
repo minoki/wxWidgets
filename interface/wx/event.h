@@ -1611,7 +1611,7 @@ public:
         This function is only available in Unicode build, i.e. when
         @c wxUSE_UNICODE is 1.
     */
-    wxChar GetUnicodeKey() const;
+    wxUniChar GetUnicodeKey() const;
 
     /**
         Returns the X position (in client coordinates) of the event.

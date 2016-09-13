@@ -6324,7 +6324,7 @@ const struct wxKeyMapping
 
 } // anonymous namespace
 
-int VKToWX(WXWORD vk, WXLPARAM lParam, wchar_t *uc)
+int VKToWX(WXWORD vk, WXLPARAM lParam, wxUniChar *uc)
 {
     int wxk;
 
@@ -6717,7 +6717,7 @@ wxKeyboardHook(int nCode, WORD wParam, DWORD lParam)
     DWORD hiWord = HIWORD(lParam);
     if ( nCode != HC_NOREMOVE && ((hiWord & KF_UP) == 0) )
     {
-        wchar_t uc = 0;
+        wxUniChar uc = 0;
         int id = wxMSWKeyboard::VKToWX(wParam, lParam, &uc);
 
         // Don't intercept keyboard entry (notably Escape) if a modal window

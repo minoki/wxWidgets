@@ -4762,7 +4762,7 @@ void wxTextCtrl::OnChar(wxKeyEvent& event)
     {
         int keycode = event.GetKeyCode();
 #if wxUSE_UNICODE
-        wxChar unicode = event.GetUnicodeKey();
+        wxUniChar unicode = event.GetUnicodeKey();
 #endif
         if ( keycode == WXK_RETURN )
         {

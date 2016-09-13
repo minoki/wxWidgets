@@ -256,7 +256,7 @@ void wxVListBoxComboPopup::SendComboBoxEvent( int selection )
 }
 
 // returns true if key was consumed
-bool wxVListBoxComboPopup::HandleKey( int keycode, bool saturate, wxChar keychar )
+bool wxVListBoxComboPopup::HandleKey( int keycode, bool saturate, wxUniChar keychar )
 {
     const int itemCount = GetCount();
 
@@ -415,7 +415,7 @@ void wxVListBoxComboPopup::OnComboCharEvent( wxKeyEvent& event )
     // unlike in OnComboKeyEvent, wxEVT_CHAR contains meaningful
     // printable character information, so pass it
 #if wxUSE_UNICODE
-    const wxChar charcode = event.GetUnicodeKey();
+    const wxUniChar charcode = event.GetUnicodeKey();
 #else
     const wxChar charcode = (wxChar)event.GetKeyCode();
 #endif
@@ -497,7 +497,7 @@ void wxVListBoxComboPopup::OnChar(wxKeyEvent& event)
         // Process partial completion key codes here, but not the arrow keys as
         // the base class will do that for us
 #if wxUSE_UNICODE
-        const wxChar charcode = event.GetUnicodeKey();
+        const wxUniChar charcode = event.GetUnicodeKey();
 #else
         const wxChar charcode = (wxChar)event.GetKeyCode();
 #endif

@@ -1907,7 +1907,7 @@ public:
 
 #if wxUSE_UNICODE
     // get the Unicode character corresponding to this key
-    wxChar GetUnicodeKey() const { return m_uniChar; }
+    wxUniChar GetUnicodeKey() const { return m_uniChar; }
 #endif // wxUSE_UNICODE
 
     // get the raw key code (platform-dependent)
@@ -1982,7 +1982,7 @@ public:
 #if wxUSE_UNICODE
     // This contains the full Unicode character
     // in a character events in Unicode mode
-    wxChar        m_uniChar;
+    wxUniChar     m_uniChar;
 #endif
 
     // these fields contain the platform-specific information about

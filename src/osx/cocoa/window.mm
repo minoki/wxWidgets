@@ -3132,7 +3132,7 @@ bool wxWidgetCocoaImpl::DoHandleCharEvent(NSEvent *event, NSString *text)
                 wxevent.m_rawCode = 0;
                 wxevent.m_rawFlags = 0;
 
-                const wxChar aunichar = *it;
+                const wxUniChar aunichar = *it;
 #if wxUSE_UNICODE
                 wxevent.m_uniChar = aunichar;
 #endif

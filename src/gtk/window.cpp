@@ -1268,7 +1268,7 @@ bool wxWindowGTK::GTKDoInsertTextFromIM(const char* str)
 #if wxUSE_UNICODE
         event.m_uniChar = *pstr;
         // Backward compatible for ISO-8859-1
-        event.m_keyCode = *pstr < 256 ? event.m_uniChar : 0;
+        event.m_keyCode = *pstr < 256 ? (int)event.m_uniChar : 0;
         wxLogTrace(TRACE_KEYS, wxT("IM sent character '%c'"), event.m_uniChar);
 #else
         event.m_keyCode = (char)*pstr;
