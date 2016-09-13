@@ -556,6 +556,9 @@ protected:
     void OnChar(wxKeyEvent& evt);
     void OnKeyDown(wxKeyEvent& evt);
     void OnTextInput(wxTextInputEvent& evt);
+#ifdef __WXMAC__
+    void OnOSXDoCommandBySelector(wxOSXDoCommandBySelectorEvent& evt);
+#endif
     void OnLoseFocus(wxFocusEvent& evt);
     void OnGainFocus(wxFocusEvent& evt);
     void OnSysColourChanged(wxSysColourChangedEvent& evt);

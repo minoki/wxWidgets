@@ -168,6 +168,9 @@ wxBEGIN_EVENT_TABLE(wxStyledTextCtrl, wxControl)
     EVT_CHAR                    (wxStyledTextCtrl::OnChar)
     EVT_KEY_DOWN                (wxStyledTextCtrl::OnKeyDown)
     EVT_TEXT_INPUT              (wxStyledTextCtrl::OnTextInput)
+#ifdef __WXMAC__
+    EVT_OSX_DO_COMMAND_BY_SELECTOR(wxStyledTextCtrl::OnOSXDoCommandBySelector)
+#endif
     EVT_KILL_FOCUS              (wxStyledTextCtrl::OnLoseFocus)
     EVT_SET_FOCUS               (wxStyledTextCtrl::OnGainFocus)
     EVT_SYS_COLOUR_CHANGED      (wxStyledTextCtrl::OnSysColourChanged)
@@ -5476,6 +5479,74 @@ void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
         break;
     }
 }
+
+
+#ifdef __WXMAC__
+void wxStyledTextCtrl::OnOSXDoCommandBySelector(wxOSXDoCommandBySelectorEvent& evt) {
+    const char *name = evt.GetSelectorCString();
+    if (strcmp(name, "deleteBackward:") == 0) {
+        DeleteBack();
+    } else if (strcmp(name, "deleteForward:") == 0) {
+        Clear();
+    } else if (strcmp(name, "deleteToBeginningOfLine:") == 0) {
+        DelLineLeft();
+    } else if (strcmp(name, "deleteToEndOfLine:") == 0) {
+        DelLineRight();
+    } else if (strcmp(name, "deleteWordForward:") == 0) {
+        DelWordRight();
+    } else if (strcmp(name, "deleteWordBackward:") == 0) {
+        DelWordLeft();
+    } else if (strcmp(name, "deleteToBeginningOfLine:") == 0) {
+        DelLineLeft();
+    } else if (strcmp(name, "deleteToEndOfLine:") == 0) {
+        DelLineRight();
+    } else if (strcmp(name, "selectAll:") == 0) {
+        SelectAll();
+    } else if (strcmp(name, "moveUp:") == 0) {
+        LineUp();
+    } else if (strcmp(name, "moveUpAndModifySelection:") == 0) {
+        LineUpExtend();
+    } else if (strcmp(name, "moveDown:") == 0) {
+        LineDown();
+    } else if (strcmp(name, "moveDownAndModifySelection:") == 0) {
+        LineDownExtend();
+    } else if (strcmp(name, "moveLeft:") == 0 || strcmp(name, "moveBackward:") == 0) {
+        CharLeft();
+    } else if (strcmp(name, "moveLeftAndModifySelection:") == 0 || strcmp(name, "moveBackwardAndModifySelection:") == 0) {
+        CharLeftExtend();
+    } else if (strcmp(name, "moveRight:") == 0 || strcmp(name, "moveForward:") == 0) {
+        CharRight();
+    } else if (strcmp(name, "moveRightAndModifySelection:") == 0 || strcmp(name, "moveForwardAndModifySelection:") == 0) {
+        CharRightExtend();
+    } else if (strcmp(name, "moveWordLeft:") == 0 || strcmp(name, "moveWordBackward:") == 0) {
+        WordLeft();
+    } else if (strcmp(name, "moveWordLeftAndModifySelection:") == 0 || strcmp(name, "moveWordBackwardAndModifySelection:") == 0) {
+        WordLeftExtend();
+    } else if (strcmp(name, "moveWordRight:") == 0 || strcmp(name, "moveWordForward:") == 0) {
+        WordRight();
+    } else if (strcmp(name, "moveWordRightAndModifySelection:") == 0 || strcmp(name, "moveWordForwardAndModifySelection:") == 0) {
+        WordRightExtend();
+    } else if (strcmp(name, "moveToBeginningOfLine:") == 0 || strcmp(name, "moveToBeginningOfParagraph:") == 0) {
+        Home();
+    } else if (strcmp(name, "moveToBeginningOfLineAndModifySelection:") == 0 || strcmp(name, "moveToBeginningOfParagraphAndModifySelection:") == 0) {
+        HomeExtend();
+    } else if (strcmp(name, "moveToEndOfLine:") == 0 || strcmp(name, "moveToEndOfParagraph:") == 0) {
+        LineEnd();
+    } else if (strcmp(name, "moveToEndOfLineAndModifySelection:") == 0 || strcmp(name, "moveToEndOfParagraphAndModifySelection:") == 0) {
+        LineEndExtend();
+    } else if (strcmp(name, "moveToBeginningOfDocument:") == 0) {
+        DocumentStart();
+    } else if (strcmp(name, "moveToBeginningOfDocumentAndModifySelection:") == 0) {
+        DocumentStartExtend();
+    } else if (strcmp(name, "moveToEndOfDocument:") == 0) {
+        DocumentEnd();
+    } else if (strcmp(name, "moveToEndOfDocumentAndModifySelection:") == 0) {
+        DocumentEndExtend();
+    } else {
+        evt.Skip();
+    }
+}
+#endif
 
 
 void wxStyledTextCtrl::OnLoseFocus(wxFocusEvent& evt) {
