@@ -22,6 +22,10 @@ public:
 
 class WXDLLIMPEXP_FWD_CORE wxTextInputEvent;
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_TEXT_INPUT, wxTextInputEvent);
+#if defined(__WXMAC__)
+class WXDLLIMPEXP_FWD_CORE wxOSXDoCommandBySelectorEvent;
+wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_OSX_DO_COMMAND_BY_SELECTOR, wxOSXDoCommandBySelectorEvent);
+#endif
 
 // Text input event class
 
@@ -113,5 +117,30 @@ typedef void (wxEvtHandler::*wxTextInputEventFunction)(wxTextInputEvent&);
             wxEVENT_HANDLER_CAST(wxTextInputEventFunction, func)
 #define EVT_TEXT_INPUT(func)  wx__DECLARE_EVT0(wxEVT_TEXT_INPUT, wxTextInputEventHandler(func))
 
+#if defined(__WXMAC__)
+class WXDLLIMPEXP_CORE wxOSXDoCommandBySelectorEvent : public wxEvent
+{
+public:
+    wxOSXDoCommandBySelectorEvent();
+
+    void SetSelector(void *selector);
+    void *GetSelector() const;
+    const char *GetSelectorCString() const;
+
+    virtual wxEvent *Clone() const;
+
+protected:
+    void *m_selector;
+
+private:
+    DECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxOSXDoCommandBySelectorEvent)
+};
+
+typedef void (wxEvtHandler::*wxOSXDoCommandBySelectorEventFunction)(wxOSXDoCommandBySelectorEvent&);
+#define wxOSXDoCommandBySelectorEventHandler(func) \
+            wxEVENT_HANDLER_CAST(wxOSXDoCommandBySelectorEventFunction, func)
+#define EVT_OSX_DO_COMMAND_BY_SELECTOR(func)  wx__DECLARE_EVT0(wxEVT_OSX_DO_COMMAND_BY_SELECTOR, wxOSXDoCommandBySelectorEventHandler(func))
+#endif
 
 #endif
+

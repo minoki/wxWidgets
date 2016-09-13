@@ -1527,6 +1527,17 @@ void wxWidgetCocoaImpl::insertText(NSString* text, WXWidget slf, void *_cmd)
 
 void wxWidgetCocoaImpl::doCommandBySelector(void* sel, WXWidget slf, void* _cmd)
 {
+    {
+        wxOSXDoCommandBySelectorEvent event;
+        event.SetSelector(sel);
+        event.SetEventObject(this);
+        event.SetId(GetWXPeer()->GetId());
+        if (GetWXPeer()->HandleWindowEvent(event))
+        {
+            return;
+        }
+    }
+
     if ( m_lastKeyDownEvent!=NULL )
     {
         // If we have a corresponding key event, send wxEVT_KEY_DOWN now.

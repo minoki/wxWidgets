@@ -2051,5 +2051,38 @@ std::vector<wxAttributedStringSegment> wxAttributedString::GetSegments() const
 }
 // End of implementation of wxAttributedString
 
+#ifdef __WXMAC__
+#include <objc/objc.h>
+
+wxOSXDoCommandBySelectorEvent::wxOSXDoCommandBySelectorEvent()
+    : m_selector(NULL)
+{
+    SetEventType(wxEVT_OSX_DO_COMMAND_BY_SELECTOR);
+}
+
+void wxOSXDoCommandBySelectorEvent::SetSelector(void *selector)
+{
+    m_selector = selector;
+}
+
+void *wxOSXDoCommandBySelectorEvent::GetSelector() const
+{
+    return m_selector;
+}
+
+const char *wxOSXDoCommandBySelectorEvent::GetSelectorCString() const
+{
+    return sel_getName(static_cast<SEL>(m_selector));
+}
+
+wxEvent *wxOSXDoCommandBySelectorEvent::Clone() const
+{
+    return new wxOSXDoCommandBySelectorEvent(*this);
+}
+
+wxIMPLEMENT_DYNAMIC_CLASS(wxOSXDoCommandBySelectorEvent, wxEvent);
+wxDEFINE_EVENT(wxEVT_OSX_DO_COMMAND_BY_SELECTOR, wxOSXDoCommandBySelectorEvent);
+#endif
+
 #endif // wxUSE_GUI
 
