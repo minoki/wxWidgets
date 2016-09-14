@@ -5431,6 +5431,8 @@ void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
                 result.m_location = preeditRange.Start().Position();
                 result.m_length = preeditRange.Length();
                 evt.SetRangeResult(result);
+                wxCharBuffer buffer = GetTextRangeRaw(preeditRange.Start().Position(), preeditRange.End().Position());
+                evt.SetStringResult(wxString::FromUTF8(buffer.data(), buffer.length()));
             } else {
                 evt.Skip();
             }
@@ -5443,15 +5445,26 @@ void wxStyledTextCtrl::OnTextInput(wxTextInputEvent& evt) {
             result.m_location = rangeMain.Start().Position();
             result.m_length = rangeMain.Length();
             evt.SetRangeResult(result);
+            wxCharBuffer buffer = GetTextRangeRaw(rangeMain.Start().Position(), rangeMain.End().Position());
+            evt.SetStringResult(wxString::FromUTF8(buffer.data(), buffer.length()));
             break;
         }
     case WXTI_TYPE_QUERY_FIRSTRECT_FOR_CHARRANGE:
         {
             wxTextInputRange range = evt.GetRange1();
             unsigned int location = range.GetLocation();
-            unsigned int length = range.GetLength();
+            //unsigned int length = range.GetLength();
             Point pt = m_swx->LocationFromPosition(location);
             evt.SetRectResult(wxRect(pt.x, pt.y, 0, m_swx->vs.lineHeight));
+            break;
+        }
+    case WXTI_TYPE_QUERY_SUBSTRING_FROM_RANGE:
+        {
+            wxTextInputRange range = evt.GetRange1();
+            unsigned int location = range.GetLocation();
+            unsigned int length = range.GetLength();
+            wxCharBuffer buffer = GetTextRangeRaw(location, location + length);
+            evt.SetCompositionString(wxAttributedString(wxString::FromUTF8(buffer.data(), buffer.length())));
             break;
         }
     default:
