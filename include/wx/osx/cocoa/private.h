@@ -197,6 +197,10 @@ protected:
     // events, don't resend them
     bool m_hasEditor;
 
+    NSUInteger m_cachedEditorLocation;
+    NSUInteger m_cachedEditorLength;
+    wxString m_cachedEditorString;
+
     wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxWidgetCocoaImpl);
 };
 
