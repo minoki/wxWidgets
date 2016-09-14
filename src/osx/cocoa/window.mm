@@ -1534,8 +1534,10 @@ void wxWidgetCocoaImpl::doCommandBySelector(void* sel, WXWidget slf, void* _cmd)
         event.SetId(GetWXPeer()->GetId());
         if (GetWXPeer()->HandleWindowEvent(event))
         {
+            wxLogTrace("textinput", "doCommandBySelector: %s handled", sel_getName((SEL)sel));
             return;
         }
+        wxLogTrace("textinput", "doCommandBySelector: %s not handled", sel_getName((SEL)sel));
     }
 
     if ( m_lastKeyDownEvent!=NULL )
